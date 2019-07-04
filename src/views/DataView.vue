@@ -1,39 +1,56 @@
 <template xmlns:v-slot="http://www.w3.org/1999/XSL/Transform">
-    <div>
-        <DateRangeFilter class="ma-2" :dates="search.dates"></DateRangeFilter>
-        <v-card class="ma-2">
-            <v-card-text>
-                <v-layout row wrap>
-                    <v-flex md3>
-                        <v-data-table
-                                :headers="table.headers"
-                                :items="table.items"
-                                class="elevation-1">
-                            <template v-slot:items="props">
-                                <td>{{ props.item.country }}</td>
-                                <td class="text-xs-right">{{ props.item.value }}</td>
-                            </template>
-                        </v-data-table>
-                    </v-flex>
-                    <v-flex md9 class="pa-2">
-                        <v-layout row wrap>
-                            <v-flex xs3 class="text-xs-right pa-2">
-                                <GranularityFilter :granularity.sync="search.granularity"></GranularityFilter>
-                            </v-flex>
-                            <v-flex xs3 offset-xs6 class="text-xs-right pa-2">
-                                <CountryFilter :clear="clearCountryData" :country.sync="search.country"></CountryFilter>
+    <v-layout row wrap>
+        <v-flex xs12 class="pa-2">
+            <v-card>
+                <v-card-title>Filtres</v-card-title>
+                <v-card-text>
+                    <v-layout row wrap>
+                        <v-flex xs12>
+                            <DateRangeFilter :dates="search.dates"></DateRangeFilter>
+                        </v-flex>
+                        <v-flex xs6>
+                            <GranularityFilter :granularity.sync="search.granularity"></GranularityFilter>
+                        </v-flex>
+                        <v-flex xs6>
+                            <CountryFilter :clear="clearCountryData" :country.sync="search.country"></CountryFilter>
+                        </v-flex>
+                    </v-layout>
+                </v-card-text>
+            </v-card>
+        </v-flex>
+        <v-flex xs12 class="pa-2">
+            <v-card>
+                <v-card-text>
+                    <v-layout row wrap>
+                        <v-flex md3>
+                            <v-data-table
+                                    :headers="table.headers"
+                                    :items="table.items"
+                                    class="elevation-0">
+                                <template v-slot:items="props">
+                                    <td>{{ props.item.country }}</td>
+                                    <td class="text-xs-right">{{ props.item.value }}</td>
+                                </template>
+                            </v-data-table>
+                        </v-flex>
+                        <v-flex md9 class="pa-2">
+                            <v-layout row wrap>
+                                <v-flex xs3 class="text-xs-right pa-2">
+                                </v-flex>
+                                <v-flex xs3 offset-xs6 class="text-xs-right pa-2">
 
-                            </v-flex>
-                            <v-flex xs12>
-                                <apexchart height="450" type="line" :options="chart.chartOptions" :series="chart.series"></apexchart>
-                            </v-flex>
-                        </v-layout>
-                    </v-flex>
-                </v-layout>
-            </v-card-text>
-        </v-card>
+                                </v-flex>
+                                <v-flex xs12>
+                                    <apexchart height="450" type="line" :options="chart.chartOptions" :series="chart.series"></apexchart>
+                                </v-flex>
+                            </v-layout>
+                        </v-flex>
+                    </v-layout>
+                </v-card-text>
+            </v-card>
 
-    </div>
+        </v-flex>
+    </v-layout>
 </template>
 
 <script>
@@ -43,6 +60,7 @@
     import DateRangeFilter from "../components/Filters/DateRangeFilter";
     import GranularityFilter from "../components/Filters/GranularityFilter";
     import CountryFilter from "../components/Filters/CountryFilter";
+    import DataFormatters from "../utils/DataFormatters";
 
 
     export default {
@@ -51,7 +69,6 @@
 
         data() {
             return {
-
                 search: {
                     granularity: 'DAY',
                     country: null,
@@ -60,8 +77,6 @@
                         end: null
                     },
                 },
-
-                error: false,
 
                 //table data
                 table: {
@@ -90,13 +105,7 @@
                         }
                     },
                     series: []
-                },
-
-                //search countries
-                countriesSearched: [],
-                countrySearchLoading: false,
-                country: null
-
+                }
             }
         },
         watch: {
@@ -130,12 +139,7 @@
             },
             countryCompute() {
                 return this.search.country;
-            },
-            countryQueryCompute() {
-                return this.search.countryQuery;
             }
-
-
         },
 
         methods: {
@@ -143,6 +147,7 @@
             clearCountryData() {
                 this.chart.series = [this.chart.series[0]];
             },
+
             getTableData(dates) {
                 let params = {
                     start: moment(dates.start).startOf('day').add(1, 'h').toISOString(),
@@ -153,6 +158,7 @@
                         this.table.items = response.data;
                     })
             },
+
             getChartData(dates, granularity, country = null) {
                 let params = {
                     start: moment(dates.start).startOf('day').add(1, 'h').toISOString(),
@@ -161,7 +167,7 @@
                 };
                 axios.get('http://localhost:8080/data/chart', {params})
                     .then(response => {
-                        this.formatAllCountriesToChart(response.data);
+                        DataFormatters.formatAllCountriesToChart(response.data, this.chart, this.format);
                         if (country) this.getChartDataForCountry(dates, granularity, country);
                     })
 
@@ -180,32 +186,6 @@
                     })
 
             },
-
-            formatAllCountriesToChart(data) {
-                this.chart.chartOptions = {
-                    ...this.chart.chartOptions, ...{
-                        xaxis: {
-                            categories: data.map(d => moment(d[0]).startOf('day').format(this.format)),
-                            labels: {
-                                show: data.length < 30
-                            }
-                        }
-                    },
-                };
-
-                this.chart.series = [{
-                    name: 'Tous les pays',
-                    data: data.map(d => d[1])
-                }
-                ];
-            },
-            formatOneCountryToChart(data) {
-
-                this.chart.series.push({
-                    name: this.country,
-                    data: data.map(d => d[1])
-                });
-            }
         }
     }
 </script>

@@ -1,11 +1,20 @@
 <template>
-    <v-autocomplete v-model="countryInput"
-                    lael="Ajouter un pays"
-                    :items="results"
-                    :loading="loading"
-                    :search-input.sync="q"
-                    clearable
-                    @click:clear="clear"></v-autocomplete>
+    <div>
+        <v-autocomplete v-model="countryInput"
+                        class="pa-2"
+                        label="Ajouter un pays"
+                        :items="results"
+                        :loading="loading"
+                        :search-input.sync="q"
+                        clearable
+                        @click:clear="clear"></v-autocomplete>
+        <v-snackbar v-model="snackbar"
+                    color="red"
+                    :top="true"
+                    timeout="4000">Erreur lors de la recherche
+        </v-snackbar>
+
+    </div>
 </template>
 
 <script>
@@ -29,6 +38,7 @@
 
         data() {
             return {
+                snackbar: false,
                 q: '',
                 loading: false,
                 results: []
@@ -53,6 +63,8 @@
                 axios.get('http://localhost:8080/countries/search', {params: {q: `%${q ? q : ''}%`}})
                     .then(response => {
                         this.results = response.data;
+                    }, () => {
+                        this.snackbar = true
                     }).finally(() => {
                     this.loading = false;
                 })

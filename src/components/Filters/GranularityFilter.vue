@@ -1,5 +1,6 @@
 <template>
     <v-select :items="granularities"
+              class="pa-2"
               item-text="text"
               item-value="value"
               label="Granularité"

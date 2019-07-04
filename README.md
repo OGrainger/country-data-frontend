@@ -18,3 +18,5 @@ Make sure backend is on port `8080`
 ```
 npm run serve
 ```
+
+Make sure server is running on port `8081` for allowed CORS
