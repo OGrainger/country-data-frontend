@@ -1,29 +1,20 @@
-# technical-aptitude-test-vue
+# Country data frontend
 
-## Project setup
+VueJS project
+
+Backend : https://github.com/OGrainger/country-data-backend
+
+## Installation
+
+Please setup and launch backend first
 ```
 npm install
 ```
 
-### Compiles and hot-reloads for development
+## Getting started
+
+Make sure backend is on port `8080`
+
 ```
 npm run serve
 ```
-
-### Compiles and minifies for production
-```
-npm run build
-```
-
-### Run your tests
-```
-npm run test
-```
-
-### Lints and fixes files
-```
-npm run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
